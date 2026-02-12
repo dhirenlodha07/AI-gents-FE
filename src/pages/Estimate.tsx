@@ -10,7 +10,7 @@ const Estimate: React.FC = () => {
     <div className="min-h-screen bg-gray-100 flex justify-center">
       <div className="w-full max-w-md bg-white h-[100dvh] flex flex-col relative shadow-2xl overflow-hidden">
         
-        {/* Header - Identical Position to Previous Pages */}
+        {/* Header */}
         <div className="bg-white p-4 shadow-sm flex items-center gap-4 sticky top-0 z-20">
           <button onClick={() => navigate('/incident')} className="p-2 hover:bg-gray-100 rounded-full">
             <ArrowLeft size={24} className="text-gray-600" />
@@ -28,7 +28,6 @@ const Estimate: React.FC = () => {
           
           {/* Total Payout Card */}
           <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-6 text-white shadow-xl shadow-blue-900/20 mb-6 relative overflow-hidden">
-             {/* Decorative Background Circles */}
              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white opacity-10 rounded-full blur-3xl"></div>
              
             <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Total Estimated Payout</p>
@@ -53,7 +52,6 @@ const Estimate: React.FC = () => {
           </h3>
           
           <div className="space-y-3">
-            {/* Item 1 */}
             <div className="bg-white border border-gray-100 p-4 rounded-xl shadow-sm flex justify-between items-center">
               <div>
                 <p className="font-bold text-gray-800">Front Bumper</p>
@@ -65,7 +63,6 @@ const Estimate: React.FC = () => {
               <p className="font-bold text-gray-700">₹4,500</p>
             </div>
 
-            {/* Item 2 */}
             <div className="bg-white border border-gray-100 p-4 rounded-xl shadow-sm flex justify-between items-center">
               <div>
                 <p className="font-bold text-gray-800">Right Headlight</p>
@@ -77,7 +74,6 @@ const Estimate: React.FC = () => {
               <p className="font-bold text-gray-700">₹8,200</p>
             </div>
             
-             {/* Item 3 */}
             <div className="bg-white border border-gray-100 p-4 rounded-xl shadow-sm flex justify-between items-center">
               <div>
                 <p className="font-bold text-gray-800">Fender Liner</p>
@@ -102,11 +98,12 @@ const Estimate: React.FC = () => {
           )}
         </div>
 
-        {/* BOTTOM BUTTON - Fixed Position (Same as Camera Page) */}
+        {/* BOTTOM BUTTON - UPDATED LOGIC */}
         <div className="absolute bottom-0 w-full bg-white p-5 border-t border-gray-100 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
           <button 
             className="w-full bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-bold text-lg shadow-lg shadow-green-600/20 active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-            onClick={() => alert("Claim Submitted! (We will build Success screen next)")}
+            // FIX IS HERE: Changed from alert() to navigate('/success')
+            onClick={() => navigate('/success')}
           >
             <FileCheck size={20} />
             Accept & Submit Claim

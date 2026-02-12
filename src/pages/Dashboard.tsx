@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Shield, ChevronRight, FileText, AlertTriangle, Globe, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-// 1. The Dictionary (Add more languages here easily)
+// 1. The Full Dictionary (Restored)
 const translations = {
   en: {
     greeting: "Hello, Dhiren 👋",
@@ -42,27 +42,26 @@ const translations = {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   
-  // 2. Language State (Default is English 'en')
+  // 2. Language State
   const [lang, setLang] = useState<'en' | 'hi' | 'mr'>('en');
   const [showLangMenu, setShowLangMenu] = useState(false);
 
-  const t = translations[lang]; // 't' stands for current translation
+  const t = translations[lang];
 
   return (
     // CENTERED MOBILE LAYOUT
     <div className="min-h-screen bg-gray-100 flex justify-center">
       <div className="w-full max-w-md bg-white min-h-screen relative shadow-2xl overflow-hidden">
         
-        <div className="p-5 space-y-6 animate-in fade-in duration-500">
+        <div className="p-5 space-y-6 animate-in fade-in duration-500 pb-32">
           
-          {/* 3. Header with Language Dropdown */}
+          {/* Header with Language Dropdown */}
           <div className="flex justify-between items-start mt-2">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{t.greeting}</h1>
               <p className="text-sm text-gray-500">{t.welcome}</p>
             </div>
 
-            {/* Language Switcher Button */}
             <div className="relative">
               <button 
                 onClick={() => setShowLangMenu(!showLangMenu)}
@@ -73,7 +72,6 @@ const Dashboard: React.FC = () => {
                 <ChevronDown size={14} />
               </button>
 
-              {/* The Dropdown Menu */}
               {showLangMenu && (
                 <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
                   <button onClick={() => {setLang('en'); setShowLangMenu(false)}} className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-gray-700">English</button>
@@ -84,7 +82,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* 4. Active Policy Card (Dynamic Text) */}
+          {/* Active Policy Card */}
           <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden group hover:scale-[1.02] transition-transform">
             <div className="absolute -right-6 -top-6 w-32 h-32 bg-white opacity-10 rounded-full blur-xl"></div>
             
@@ -110,7 +108,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* 5. Start Claim Button */}
+          {/* Start Claim Button (Only way to start flow) */}
           <button 
             onClick={() => navigate('/incident')}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-xl shadow-lg shadow-orange-500/20 flex items-center justify-between group transition-all active:scale-[0.98]"
@@ -127,7 +125,7 @@ const Dashboard: React.FC = () => {
             <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
           </button>
 
-          {/* 6. Past Claims List */}
+          {/* Past Claims List */}
           <div>
             <h3 className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-4">{t.recent}</h3>
             <div className="space-y-3">
