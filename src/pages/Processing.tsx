@@ -1,81 +1,112 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scan, CheckCircle2, Loader2, BrainCircuit } from 'lucide-react';
+import { Scan, BrainCircuit, Server, CheckCircle2 } from 'lucide-react';
 
-const Processing: React.FC = () => {
+export default function Processing() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
-
-  const steps = [
-    "Uploading secure images...",
-    "Scanning for exterior damage...",
-    "Identifying vehicle parts...",
-    "Calculating repair costs...",
-    "Finalizing assessment..."
-  ];
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState("Initializing AI Models...");
 
   useEffect(() => {
-    const textInterval = setInterval(() => {
-      setStep((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
-    }, 800);
+    // 1. Progress Bar Animation
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 2; // Speed of progress
+      });
+    }, 60);
 
+    // 2. Status Text Updates (Simulating AI steps)
+    setTimeout(() => setStatus("Scanning Image Geometry..."), 1000);
+    setTimeout(() => setStatus("Identifying Vehicle Parts..."), 2000);
+    setTimeout(() => setStatus("Detecting Surface Damage..."), 3000);
+    setTimeout(() => setStatus("Finalizing Analysis..."), 4000);
+
+    // 3. Navigation to Next Page
     const redirectTimer = setTimeout(() => {
-      navigate('/estimate');
+      navigate('/detection'); // <--- Navigates to the new Detection Page
     }, 4500);
 
     return () => {
-      clearInterval(textInterval);
+      clearInterval(interval);
       clearTimeout(redirectTimer);
     };
-  }, [navigate, steps.length]);
+  }, [navigate]);
 
   return (
-    // DARK THEME for "High Tech" feel, but same Mobile Layout Dimensions
-    <div className="min-h-screen bg-gray-900 flex justify-center">
-      <div className="w-full max-w-md h-[100dvh] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden bg-gray-900 shadow-2xl">
-        
-        {/* Background Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-600/20 rounded-full blur-[100px] animate-pulse"></div>
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6 text-white relative overflow-hidden">
+      
+      {/* Background Glow Effect */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/20 blur-[100px] rounded-full"></div>
 
-        {/* Scanner Animation */}
-        <div className="relative z-10 mb-10">
-          <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 animate-ping"></div>
-          <div className="bg-gray-800/80 backdrop-blur-md p-8 rounded-full border border-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.3)]">
-            <Scan size={64} className="text-blue-400 animate-pulse" />
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+        
+        {/* Animated Icon Scanner */}
+        <div className="relative mb-12">
+          <div className="absolute inset-0 bg-blue-500/30 blur-xl rounded-full animate-pulse"></div>
+          <div className="bg-gray-800 p-6 rounded-2xl border border-blue-500/50 shadow-2xl relative overflow-hidden">
+            {/* Scanning Line Animation */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_15px_rgba(59,130,246,1)] animate-[scan_2s_ease-in-out_infinite]"></div>
+            
+            <Scan size={64} className="text-blue-400" />
           </div>
         </div>
 
-        {/* Dynamic Text */}
-        <h2 className="text-2xl font-bold text-white mb-2 relative z-10 flex items-center justify-center gap-2">
-          <BrainCircuit size={24} className="text-blue-500" />
-          AI Analysis
-        </h2>
-        
-        <div className="h-8 mb-10 relative z-10">
-          <p key={step} className="text-blue-300 animate-in fade-in slide-in-from-bottom-2 duration-300 font-mono text-sm">
-            {steps[step]}
-          </p>
+        {/* Status Text */}
+        <h2 className="text-2xl font-bold mb-2 animate-pulse">{progress < 100 ? "Processing..." : "Complete!"}</h2>
+        <p className="text-blue-200 text-sm mb-8 h-6">{status}</p>
+
+        {/* Progress Bar Container */}
+        <div className="w-full bg-gray-800 h-3 rounded-full overflow-hidden border border-gray-700 mb-4 relative">
+          <div 
+            className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-100 ease-out relative"
+            style={{ width: `${progress}%` }}
+          >
+            {/* Shimmer Effect on Bar */}
+            <div className="absolute top-0 right-0 bottom-0 w-full bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-[shimmer_1s_infinite]"></div>
+          </div>
         </div>
 
-        {/* Steps Visualizer */}
-        <div className="w-full max-w-xs space-y-4 relative z-10 pl-8">
-          {steps.map((s, i) => (
-            <div key={i} className={`flex items-center gap-4 text-sm transition-all duration-500 ${i <= step ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-              {i < step ? (
-                <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-              ) : i === step ? (
-                <Loader2 size={18} className="text-blue-400 animate-spin shrink-0" />
-              ) : (
-                <div className="w-4 h-4 rounded-full border border-gray-700 shrink-0 ml-0.5" />
-              )}
-              <span className={i === step ? 'text-white font-medium' : 'text-gray-600'}>{s}</span>
-            </div>
-          ))}
+        {/* Percentage */}
+        <div className="w-full flex justify-between text-xs text-gray-500 font-mono">
+          <span>AI-GENTS CLOUD</span>
+          <span>{progress}%</span>
+        </div>
+
+        {/* AI Steps (Visual Decoration) */}
+        <div className="mt-12 grid grid-cols-3 gap-4 w-full opacity-50">
+          <div className={`flex flex-col items-center gap-2 transition-colors ${progress > 30 ? 'text-blue-400' : 'text-gray-600'}`}>
+            <Server size={20} />
+            <span className="text-[10px]">UPLOAD</span>
+          </div>
+          <div className={`flex flex-col items-center gap-2 transition-colors ${progress > 60 ? 'text-blue-400' : 'text-gray-600'}`}>
+            <BrainCircuit size={20} />
+            <span className="text-[10px]">ANALYZE</span>
+          </div>
+          <div className={`flex flex-col items-center gap-2 transition-colors ${progress > 90 ? 'text-blue-400' : 'text-gray-600'}`}>
+            <CheckCircle2 size={20} />
+            <span className="text-[10px]">RESULT</span>
+          </div>
         </div>
 
       </div>
+
+      {/* CSS for Keyframe Animations (Add to your global CSS or keep here for simplicity) */}
+      <style>{`
+        @keyframes scan {
+          0%, 100% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
-};
-
-export default Processing;
+}

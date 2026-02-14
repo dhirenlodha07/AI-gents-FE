@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Shield, ChevronRight, FileText, AlertTriangle, Globe, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-// 1. The Full Dictionary (Restored)
+// 1. The Full Dictionary
 const translations = {
   en: {
     greeting: "Hello, Dhiren 👋",
@@ -43,6 +43,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   
   // 2. Language State
+  // Explicitly typing the state to satisfy TypeScript
   const [lang, setLang] = useState<'en' | 'hi' | 'mr'>('en');
   const [showLangMenu, setShowLangMenu] = useState(false);
 
@@ -108,9 +109,10 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Start Claim Button (Only way to start flow) */}
+          {/* --- FIXED BUTTON --- */}
+          {/* Now points to '/capture' to start the claim flow correctly */}
           <button 
-            onClick={() => navigate('/incident')}
+            onClick={() => navigate('/capture')}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-xl shadow-lg shadow-orange-500/20 flex items-center justify-between group transition-all active:scale-[0.98]"
           >
             <div className="flex items-center gap-4">

@@ -1,34 +1,29 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Home } from 'lucide-react';
+import { Home } from 'lucide-react';
 
-const FinalSuccess: React.FC = () => {
+export default function FinalSuccess() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center">
-      <div className="w-full max-w-md bg-white h-[100dvh] flex flex-col shadow-2xl">
+    <div className="min-h-screen bg-blue-600 flex justify-center w-full">
+      <div className="w-full max-w-md flex flex-col items-center justify-center p-8 text-center text-white">
         
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
-            <CheckCircle size={48} className="text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Appointment Booked!</h2>
-          <p className="text-gray-500 text-sm">Confirmation email sent.</p>
+        <h1 className="text-4xl font-extrabold mb-4 tracking-tight">THANK YOU</h1>
+        <p className="text-blue-100 mb-12 text-lg">Your claim process has been initiated successfully.</p>
+        
+        <div className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-12 border border-white/20">
+          <p className="text-sm text-blue-50">Our team will contact you shortly regarding the vehicle pickup.</p>
         </div>
 
-        <div className="p-5">
-          <button 
-            onClick={() => navigate('/')}
-            className="w-full bg-gray-900 text-white p-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
-          >
-            <Home size={20} /> Back to Home (Thank You)
-          </button>
-        </div>
+        <button 
+          onClick={() => navigate('/')}
+          className="w-full bg-white text-blue-600 font-bold py-4 rounded-xl shadow-xl flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+        >
+          <Home size={20} /> Go to Dashboard
+        </button>
 
       </div>
     </div>
   );
-};
-
-export default FinalSuccess;
+}
