@@ -12,7 +12,7 @@ export default function ConfirmationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalPayout = "12,500";
-  const vehicleNumber = "MH-12-DE-1443";
+  const vehicleNumber = "MH-12-AB-1234";
 
   // --- 2. UPDATE IMAGE LOGIC ---
   // Retrieve captured image passed from previous screens, OR use your new hardcoded image as the default.

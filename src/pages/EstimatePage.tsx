@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, AlertTriangle, FileCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, FileCheck, X, LogOut } from 'lucide-react';
 
 const EstimatePage: React.FC = () => {
   const navigate = useNavigate();
+  const [showQuitModal, setShowQuitModal] = useState(false);
 
   // DATA SYNCED TO TOTAL 12,500
   const damages = [
@@ -49,7 +50,7 @@ const EstimatePage: React.FC = () => {
         </div>
 
         {/* SCROLLABLE CONTENT */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-32 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-48 scrollbar-hide">
           
           {/* TOTAL PAYOUT CARD */}
           <div className="bg-gradient-to-br from-[#2563eb] to-[#1e40af] rounded-3xl p-6 text-white shadow-xl shadow-blue-200">
@@ -97,22 +98,65 @@ const EstimatePage: React.FC = () => {
           </div>
         </div>
 
-        {/* BOTTOM ACTION BUTTON */}
-        <div className="absolute bottom-0 w-full bg-white p-5 border-t border-gray-100 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] rounded-t-3xl">
-          <button 
-            onClick={() => navigate('/confirmation')}
-            className="w-full bg-[#16a34a] hover:bg-[#15803d] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg transition-all active:scale-[0.98]"
-          >
-            <FileCheck size={20} />
-            Accept & Submit Claim
-          </button>
+        {/* BOTTOM ACTION BUTTONS */}
+        <div className="absolute bottom-0 w-full bg-white px-5 py-4 border-t border-gray-100 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] rounded-t-3xl">
+          <div className="flex flex-col gap-3">
+            {/* Proceed Button */}
+            <button 
+              onClick={() => navigate('/confirmation')}
+              className="w-full bg-[#16a34a] hover:bg-[#15803d] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg transition-all active:scale-[0.98]"
+            >
+              <FileCheck size={20} />
+              Accept & Submit Claim
+            </button>
+
+            {/* Quit Button - Triggers Modal */}
+            <button 
+              onClick={() => setShowQuitModal(true)}
+              className="w-full bg-white border-2 border-red-100 text-red-500 hover:bg-red-50 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            >
+              Quit
+            </button>
+          </div>
           
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex justify-center pb-2">
             <div className="h-1.5 w-1/3 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-orange-500 w-full"></div>
             </div>
           </div>
         </div>
+
+        {/* --- CONFIRMATION MODAL --- */}
+        {showQuitModal && (
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+              
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                <LogOut size={24} className="text-red-500" />
+              </div>
+
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Exit Claim Process?</h3>
+              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                You are about to discard this estimate. Your progress will be lost and you will need to start over.
+              </p>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowQuitModal(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => navigate('/')}
+                  className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 transition-colors"
+                >
+                  Yes, Quit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
