@@ -1,40 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Star, Phone, ArrowLeft, Navigation, CheckCircle2 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { Star, Phone, ArrowLeft, Navigation, CheckCircle2, Crosshair } from 'lucide-react';
+
+// --- ICONS ---
+const garageIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+const userIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+// --- HELPER TO RE-CENTER MAP ---
+function RecenterAutomatically({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([lat, lng]);
+  }, [lat, lng, map]);
+  return null;
+}
+
+// --- DISTANCE CALCULATION FUNCTION (Haversine Formula) ---
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+  return d.toFixed(1); // Return string with 1 decimal place
+}
+
+function deg2rad(deg: number) {
+  return deg * (Math.PI / 180);
+}
+
+// --- GARAGE DATA ---
+const garages = [
+  { id: 1, name: "Ganesh Car Garage", address: "Behind Petrol Pump, Dhankawadi, Pune", rating: 4.9, reviews: 120, lat: 18.4685, lng: 73.8552 },
+  { id: 2, name: "Shilimkar Auto Garage", address: "Bharati Vidyapeeth Road, Katraj, Pune", rating: 4.2, reviews: 85, lat: 18.4582, lng: 73.8525 },
+  { id: 3, name: "Balaji Garage", address: "Agam Mandir Road, Katraj, Pune", rating: 4.7, reviews: 219, lat: 18.4554, lng: 73.8488 },
+  { id: 4, name: "Shreenath Krupa Motors", address: "Pune Satara Road, Dhankawadi, Pune", rating: 4.9, reviews: 156, lat: 18.4750, lng: 73.8580 },
+  { id: 5, name: "Radha Automobile", address: "Balaji Nagar, Dhankawadi, Pune", rating: 4.8, reviews: 92, lat: 18.4650, lng: 73.8555 },
+];
 
 const Garages: React.FC = () => {
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  
+  // Default Center: Katraj / Dhankawadi area
+  const [position, setPosition] = useState<{lat: number, lng: number}>({ 
+    lat: 18.4650, 
+    lng: 73.8520 
+  });
+  const [locationError, setLocationError] = useState('');
+  const [userLocationFound, setUserLocationFound] = useState(false);
 
-  const garages = [
-    { 
-      id: 1, 
-      name: "Sai Service Station", 
-      address: "J.M. Road, Deccan Gymkhana, Pune", 
-      rating: 4.8, 
-      reviews: 342, 
-      dist: "2.3 km",
-      closes: "7:00 PM"
-    },
-    { 
-      id: 2, 
-      name: "Autovista Repairs", 
-      address: "Nagar Road, Viman Nagar, Pune", 
-      rating: 4.9, 
-      reviews: 527, 
-      dist: "3.8 km",
-      closes: "8:00 PM"
-    },
-    { 
-      id: 3, 
-      name: "Mechanix Pro", 
-      address: "Baner - Pashan Link Rd, Pune", 
-      rating: 4.5, 
-      reviews: 128, 
-      dist: "5.1 km",
-      closes: "9:00 PM"
-    },
-  ];
+  // Get User Location Function
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setPosition({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+          setUserLocationFound(true);
+          setLocationError('');
+        },
+        () => {
+          setLocationError('Location access denied.');
+        }
+      );
+    } else {
+      setLocationError('Geolocation not supported.');
+    }
+  };
+
+  useEffect(() => {
+    getUserLocation();
+  }, []);
 
   const handleBooking = () => {
     if (selectedId) {
@@ -44,8 +105,8 @@ const Garages: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center">
-      <div className="w-full max-w-md bg-white h-[100dvh] flex flex-col relative shadow-2xl">
+    <div className="min-h-screen bg-gray-100 flex justify-center">
+      <div className="w-full max-w-md bg-white h-[100dvh] flex flex-col relative shadow-2xl overflow-hidden">
         
         {/* HEADER */}
         <div className="bg-[#005da6] p-5 text-white pt-6 pb-8 rounded-b-[2rem] relative z-20 shadow-lg">
@@ -59,104 +120,121 @@ const Garages: React.FC = () => {
         </div>
 
         {/* MAP SECTION */}
-        <div className="h-64 bg-blue-50/40 w-full relative overflow-hidden -mt-6 border-b border-gray-100 group">
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#005da6 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-            
-            {/* Center "Your Location" Marker */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
-                <div className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white shadow-lg relative z-10"></div>
-                <div className="w-12 h-12 bg-orange-500/20 rounded-full absolute -top-4 animate-ping"></div>
-                <div className="bg-white px-2 py-0.5 rounded shadow text-[10px] font-bold mt-1 text-gray-700 whitespace-nowrap">Your Location</div>
-            </div>
-
-            {/* PIN 1: Left */}
-            <button 
-              onClick={() => setSelectedId(1)}
-              className={`absolute top-1/3 left-1/4 transition-transform hover:scale-110 ${selectedId === 1 ? 'scale-125 z-20' : 'animate-bounce duration-[2000ms]'}`}
+        <div className="h-64 w-full relative -mt-6 border-b border-gray-100 z-10">
+            <MapContainer 
+                center={[position.lat, position.lng]} 
+                zoom={14} 
+                scrollWheelZoom={true} 
+                style={{ height: '100%', width: '100%' }}
+                zoomControl={false}
             >
-                <MapPin size={32} className={`${selectedId === 1 ? 'text-orange-500' : 'text-[#005da6]'} drop-shadow-md fill-white`} />
-            </button>
-            
-            {/* PIN 2: Bottom Right */}
-            <button 
-              onClick={() => setSelectedId(2)}
-              className={`absolute bottom-1/3 right-1/4 transition-transform hover:scale-110 ${selectedId === 2 ? 'scale-125 z-20' : 'animate-bounce duration-[2500ms]'}`}
-            >
-                <MapPin size={32} className={`${selectedId === 2 ? 'text-orange-500' : 'text-[#005da6]'} drop-shadow-md fill-white`} />
-            </button>
+                <TileLayer
+                    attribution='&copy; OSM'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <RecenterAutomatically lat={position.lat} lng={position.lng} />
 
-            {/* PIN 3: Top Right (NEW ADDITION) */}
-            <button 
-              onClick={() => setSelectedId(3)}
-              className={`absolute top-1/4 right-1/3 transition-transform hover:scale-110 ${selectedId === 3 ? 'scale-125 z-20' : 'animate-bounce duration-[2200ms]'}`}
-            >
-                <MapPin size={32} className={`${selectedId === 3 ? 'text-orange-500' : 'text-[#005da6]'} drop-shadow-md fill-white`} />
-            </button>
+                {/* Show User Marker only if found */}
+                {userLocationFound && (
+                    <Marker position={[position.lat, position.lng]} icon={userIcon}>
+                        <Popup>Your Location</Popup>
+                    </Marker>
+                )}
 
-            <div className="absolute top-8 left-4 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2 text-xs font-bold text-gray-700">
-                <MapPin size={12} className="text-[#005da6]" /> Pune, Maharashtra
-            </div>
+                {garages.map((garage) => (
+                    <Marker 
+                        key={garage.id} 
+                        position={[garage.lat, garage.lng]} 
+                        icon={garageIcon}
+                        eventHandlers={{ click: () => setSelectedId(garage.id) }}
+                    />
+                ))}
+            </MapContainer>
+
+            <button 
+              onClick={getUserLocation}
+              className="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg text-[#005da6] z-[400] active:scale-95 transition-transform"
+            >
+              <Crosshair size={20} />
+            </button>
         </div>
 
         {/* LIST SECTION */}
-        <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 space-y-4 -mt-2 relative z-10 rounded-t-2xl pb-44">
+        <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 space-y-4 relative z-10 pb-44">
+            
+            {locationError && (
+              <div className="bg-red-50 text-red-500 text-xs p-3 rounded-xl border border-red-100 mb-2">
+                {locationError} - Distances may be inaccurate.
+              </div>
+            )}
+
             <div className="flex justify-between items-end px-1 sticky top-0 bg-gray-50/80 backdrop-blur-sm py-2 z-10">
+                {/* REVERTED TO GENERIC HEADER */}
                 <h3 className="font-bold text-gray-700">Nearby Garages</h3>
-                <span className="text-xs text-gray-400">3 locations found</span>
+                <span className="text-xs text-gray-400">{garages.length} locations found</span>
             </div>
 
-            {garages.map((g) => (
-                <div 
-                    key={g.id}
-                    onClick={() => setSelectedId(g.id)}
-                    className={`p-4 rounded-2xl shadow-sm border-2 transition-all cursor-pointer relative overflow-hidden ${
-                        selectedId === g.id 
-                        ? 'bg-blue-50 border-[#005da6] shadow-md ring-1 ring-blue-100 scale-[1.01]' 
-                        : 'bg-white border-transparent hover:border-gray-200'
-                    }`}
-                >
-                    {selectedId === g.id && (
-                      <div className="absolute top-0 right-0 bg-[#005da6] p-1.5 rounded-bl-xl shadow-sm z-10">
-                        <CheckCircle2 size={14} className="text-white" />
-                      </div>
-                    )}
+            {garages.map((g) => {
+                // CALCULATE REAL DISTANCE HERE
+                const distance = userLocationFound 
+                    ? `${getDistance(position.lat, position.lng, g.lat, g.lng)} km` 
+                    : 'Calculating...';
 
-                    <div className="flex justify-between items-start mb-1">
-                        <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-gray-800 text-lg">{g.name}</h4>
-                            <span className="bg-white text-[#005da6] text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-100">Certified</span>
+                return (
+                    <div 
+                        key={g.id}
+                        onClick={() => setSelectedId(g.id)}
+                        className={`p-4 rounded-2xl shadow-sm border-2 transition-all cursor-pointer relative overflow-hidden ${
+                            selectedId === g.id 
+                            ? 'bg-blue-50 border-[#005da6] shadow-md ring-1 ring-blue-100 scale-[1.01]' 
+                            : 'bg-white border-transparent hover:border-gray-200'
+                        }`}
+                    >
+                        {selectedId === g.id && (
+                          <div className="absolute top-0 right-0 bg-[#005da6] p-1.5 rounded-bl-xl shadow-sm z-10">
+                            <CheckCircle2 size={14} className="text-white" />
+                          </div>
+                        )}
+
+                        <div className="flex justify-between items-start mb-1">
+                            <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-gray-800 text-lg">{g.name}</h4>
+                                <span className="bg-white text-[#005da6] text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-100">Certified</span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
+                            <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-md">
+                                <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                                <span className="font-bold text-gray-800">{g.rating}</span>
+                            </div>
+                            <span className="text-gray-300">|</span>
+                            
+                            {/* DYNAMIC DISTANCE DISPLAY */}
+                            <div className="flex items-center gap-1 text-[#005da6] font-bold bg-blue-50 px-2 py-0.5 rounded-md">
+                                 <Navigation size={12} /> {distance}
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-gray-400 mb-4 leading-relaxed w-3/4">{g.address}</p>
+
+                        <div className="flex gap-3">
+                            <button 
+                                className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                                    selectedId === g.id 
+                                    ? 'bg-[#005da6] text-white shadow-md' 
+                                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                }`}
+                            >
+                                {selectedId === g.id ? 'Selected' : 'Select Garage'}
+                            </button>
+                            <button className="w-12 h-10 border border-gray-200 rounded-xl flex items-center justify-center text-[#005da6] bg-white hover:bg-blue-50 transition-colors">
+                                <Phone size={18} />
+                            </button>
                         </div>
                     </div>
-
-                    <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
-                        <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-md">
-                            <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                            <span className="font-bold text-gray-800">{g.rating}</span>
-                        </div>
-                        <span className="text-gray-300">|</span>
-                        <div className="flex items-center gap-1 text-gray-500">
-                             <Navigation size={12} /> {g.dist}
-                        </div>
-                    </div>
-
-                    <p className="text-xs text-gray-400 mb-4 leading-relaxed w-3/4">{g.address}</p>
-
-                    <div className="flex gap-3">
-                        <button 
-                            className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                                selectedId === g.id 
-                                ? 'bg-[#005da6] text-white shadow-md' 
-                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                            }`}
-                        >
-                            {selectedId === g.id ? 'Selected' : 'Select Garage'}
-                        </button>
-                        <button className="w-12 h-10 border border-gray-200 rounded-xl flex items-center justify-center text-[#005da6] bg-white hover:bg-blue-50 transition-colors">
-                            <Phone size={18} />
-                        </button>
-                    </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
 
         {/* BOTTOM BAR */}
