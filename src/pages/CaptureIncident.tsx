@@ -1,207 +1,203 @@
-import React, { useRef, useState, useCallback } from 'react';
-import Webcam from 'react-webcam';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Camera, FileText, XCircle, RefreshCw, Check, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Camera, Upload, FileText, X, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const CaptureIncident: React.FC = () => {
   const navigate = useNavigate();
-  const webcamRef = useRef<Webcam>(null);
+  const [description, setDescription] = useState('');
   
-  // 1. FORM STATE
-  const [description, setDescription] = useState(''); 
+  // State to store uploaded image previews
   const [images, setImages] = useState<{ [key: string]: string | null }>({
     front: null,
     back: null,
     side: null,
   });
 
-  // 2. FEEDBACK STATE
-  const [photoFeedback, setPhotoFeedback] = useState<{ [key: string]: string }>({
-    front: '',
-    back: '',
-    side: '',
-  });
+  // Refs to programmatically open camera or gallery
+  const fileInputRefs = {
+    front: { camera: useRef<HTMLInputElement>(null), gallery: useRef<HTMLInputElement>(null) },
+    back: { camera: useRef<HTMLInputElement>(null), gallery: useRef<HTMLInputElement>(null) },
+    side: { camera: useRef<HTMLInputElement>(null), gallery: useRef<HTMLInputElement>(null) },
+  };
 
-  // 3. OVERLAY STATE
-  const [activeView, setActiveView] = useState<string | null>(null); 
-  const [tempImage, setTempImage] = useState<string | null>(null); 
-  const [tempFeedback, setTempFeedback] = useState(''); 
-
-  const capture = useCallback(() => {
-    if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      setTempImage(imageSrc); 
-    }
-  }, [webcamRef]);
-
-  const handleSave = () => {
-    if (tempImage && activeView) {
-      setImages(prev => ({ ...prev, [activeView]: tempImage }));
-      setPhotoFeedback(prev => ({ ...prev, [activeView]: tempFeedback }));
-      setTempImage(null);
-      setTempFeedback('');
-      setActiveView(null);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, view: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setImages(prev => ({ ...prev, [view]: imageUrl }));
     }
   };
 
-  const hasAtLeastOneImage = images.front || images.back || images.side;
-  const canAnalyze = hasAtLeastOneImage && description.trim().length > 5;
+  const removeImage = (view: string) => {
+    setImages(prev => ({ ...prev, [view]: null }));
+  };
+
+  // FIXED LOGIC: Requires description > 10 chars AND at least one image uploaded
+  const isReady = description.trim().length > 10 && (images.front || images.back || images.side);
+
+  // Photo requirements mapping
+  const photoRequirements = [
+    { id: 'front', label: 'Front Side', required: false },
+    { id: 'back', label: 'Back Side', required: false },
+    { id: 'side', label: 'Side View', required: false },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center">
-      <div className="w-full max-w-md bg-gray-50 h-[100dvh] flex flex-col relative shadow-2xl overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex justify-center w-full">
+      <div className="w-full max-w-md bg-slate-50 min-h-screen flex flex-col relative shadow-2xl overflow-hidden">
         
-        {/* HEADER */}
-        <div className="bg-[#005da6] p-4 shadow-sm flex items-center gap-4 sticky top-0 z-20 text-white rounded-b-2xl">
-          <button onClick={() => navigate('/')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <ArrowLeft size={24} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold">Incident Details</h1>
-            <p className="text-[10px] text-blue-200 font-black uppercase tracking-widest">Step 2 of 4</p>
+        {/* PREMIUM DEEP BLUE HEADER */}
+        <div className="bg-[#005da6] p-5 text-white pt-8 pb-10 rounded-b-[2rem] relative z-20 shadow-lg">
+          <div className="flex items-center gap-3 mb-2">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/20 rounded-full transition-colors -ml-2">
+              <ArrowLeft size={24} className="text-white" />
+            </button>
+            <h1 className="text-xl font-bold">Upload Evidence</h1>
+          </div>
+          <div className="flex items-center justify-between px-1 mt-4">
+             <p className="text-blue-100 text-sm font-medium opacity-90">Document the damage</p>
+             <span className="text-[10px] font-black bg-blue-800/50 px-2 py-1 rounded-full uppercase tracking-widest text-blue-200">Step 2 of 4</span>
+          </div>
+          
+          {/* Progress Bar in Header */}
+          <div className="mt-5 h-1.5 w-full bg-blue-900/50 rounded-full overflow-hidden">
+             <div className="h-full bg-orange-500 w-1/2 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.6)]"></div>
           </div>
         </div>
 
-        {/* FORM CONTENT */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-40 scrollbar-hide">
-          <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-[#005da6] h-full w-1/2 transition-all duration-500"></div>
-          </div>
-
-          {/* INCIDENT DESCRIPTION BOX */}
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-3">
-              <FileText size={18} className="text-[#005da6]" />
-              <label className="text-sm font-bold text-gray-800">Incident Description</label>
-            </div>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the incident for the claim record..."
-              className="w-full p-4 bg-blue-50/60 hover:bg-blue-50 border border-blue-100 rounded-xl text-sm h-32 focus:bg-white focus:ring-2 focus:ring-[#005da6] focus:border-transparent outline-none transition-all placeholder:text-gray-400 text-gray-700 resize-none"
-            />
-          </div>
-
-          {/* Photo Slots */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2 px-1">
-              <Camera size={14} /> Evidence Photos
-            </h3>
-            {['front', 'back', 'side'].map((view) => (
-              <div key={view} className={`bg-white p-3 rounded-xl border transition-all flex items-center justify-between ${images[view] ? 'border-green-100 shadow-sm' : 'border-gray-200'}`}>
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden border border-gray-100 flex items-center justify-center">
-                    {images[view] ? (
-                      <img src={images[view]!} className="w-full h-full object-cover" alt={view} />
-                    ) : (
-                      <Camera size={20} className="text-gray-300" />
-                    )}
-                  </div>
-                  <div>
-                    <span className="capitalize font-bold text-gray-800 block text-sm">{view} View</span>
-                    {photoFeedback[view] && (
-                      <span className="text-[9px] text-blue-500 font-bold bg-blue-50 px-1 rounded">Feedback Saved</span>
-                    )}
-                  </div>
+        {/* SCROLLABLE CONTENT */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-8 pb-32 -mt-2 relative z-10">
+          
+          {/* INCIDENT DESCRIPTION CARD */}
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 relative">
+             <div className="flex items-center gap-2 mb-3">
+                <div className="bg-blue-50 p-2 rounded-xl text-[#005da6]">
+                   <FileText size={20} />
                 </div>
-                <button 
-                  onClick={() => setActiveView(view)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    images[view] ? 'bg-gray-100 text-gray-600' : 'bg-[#005da6] text-white shadow-md'
-                  }`}
-                >
-                  {images[view] ? 'Retake' : 'Capture'}
-                </button>
-              </div>
-            ))}
+                <h3 className="font-bold text-slate-800">Incident Details</h3>
+             </div>
+             
+             <textarea 
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe how the damage occurred (e.g., Rear-ended at a traffic light)..."
+                className="w-full h-28 bg-slate-50 rounded-2xl p-4 border border-slate-200 outline-none resize-none text-sm text-slate-700 placeholder:text-slate-400 focus:border-[#005da6] focus:ring-2 focus:ring-blue-100 transition-all"
+             />
+             {description.length > 0 && description.length <= 10 && (
+                <p className="text-[10px] text-red-500 mt-2 flex items-center gap-1"><AlertCircle size={12}/> Please provide more detail.</p>
+             )}
+          </div>
+
+          {/* EVIDENCE PHOTOS SECTION */}
+          <div>
+             <div className="flex justify-between items-end mb-4 px-2">
+               <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Vehicle Photos</h3>
+               {/* Helpful hint for the user */}
+               {!(images.front || images.back || images.side) && (
+                 <span className="text-[10px] font-bold text-red-400">*At least 1 required</span>
+               )}
+             </div>
+
+             <div className="space-y-4">
+               {photoRequirements.map((item) => (
+                  <div key={item.id}>
+                    {/* Camera Input */}
+                    <input 
+                      type="file" 
+                      accept="image/jpeg, image/png, image/jpg" 
+                      capture="environment" 
+                      ref={fileInputRefs[item.id as keyof typeof fileInputRefs].camera}
+                      className="hidden" 
+                      onChange={(e) => handleImageChange(e, item.id)}
+                    />
+                    
+                    {/* Gallery Input */}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      ref={fileInputRefs[item.id as keyof typeof fileInputRefs].gallery}
+                      className="hidden" 
+                      onChange={(e) => handleImageChange(e, item.id)}
+                    />
+
+                    {images[item.id] ? (
+                      /* IMAGE PREVIEW STATE */
+                      <div className="relative rounded-3xl overflow-hidden shadow-md border-2 border-green-500 group h-32">
+                         <img 
+                           src={images[item.id] as string} 
+                           alt={item.label} 
+                           className="w-full h-full object-cover cursor-pointer" 
+                           onClick={() => fileInputRefs[item.id as keyof typeof fileInputRefs].camera.current?.click()} // Tap to retake
+                         />
+                         
+                         {/* Overlays */}
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                         
+                         <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                           <CheckCircle2 size={16} className="text-green-400 fill-white" />
+                           <span className="text-white text-xs font-bold drop-shadow-md">{item.label}</span>
+                         </div>
+
+                         <button 
+                           onClick={(e) => { e.stopPropagation(); removeImage(item.id); }}
+                           className="absolute top-3 right-3 bg-red-500/90 text-white p-2 rounded-full backdrop-blur-md hover:bg-red-600 transition-colors shadow-lg"
+                         >
+                           <X size={16} />
+                         </button>
+                      </div>
+                    ) : (
+                      /* EMPTY UPLOAD BOX STATE */
+                      <div 
+                        onClick={() => fileInputRefs[item.id as keyof typeof fileInputRefs].camera.current?.click()}
+                        className="w-full border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden group h-28 bg-blue-50/50 border-blue-200 hover:bg-blue-50 hover:border-[#005da6]/50"
+                      >
+                         <div className="p-3 rounded-full mb-2 bg-[#005da6] text-white shadow-sm shadow-blue-900/10">
+                           <Camera size={20} />
+                         </div>
+                         
+                         <span className="font-bold text-sm text-[#005da6]">
+                           Tap to capture {item.label}
+                         </span>
+                         
+                         <span className="text-[10px] text-blue-300 font-bold uppercase tracking-widest mt-1">Optional</span>
+
+                         {/* Subtle Gallery Button */}
+                         <button 
+                           onClick={(e) => { e.stopPropagation(); fileInputRefs[item.id as keyof typeof fileInputRefs].gallery.current?.click(); }}
+                           className="absolute bottom-3 right-3 bg-white p-2.5 rounded-xl shadow-sm border border-blue-100 text-blue-400 hover:text-[#005da6] hover:border-blue-300 transition-colors z-10"
+                           title="Upload from Gallery"
+                         >
+                           <Upload size={16} />
+                         </button>
+                      </div>
+                    )}
+                  </div>
+               ))}
+             </div>
           </div>
         </div>
 
         {/* BOTTOM ACTION BAR */}
-        <div className="absolute bottom-0 w-full bg-white p-5 border-t border-gray-100 z-30 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] rounded-t-3xl">
+        <div className="absolute bottom-0 w-full bg-white/90 backdrop-blur-xl p-5 border-t border-slate-100 z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[2rem]">
           <button 
-            onClick={() => navigate('/processing', { 
-              state: { 
-                capturedImages: images, 
-                description: description, 
-                viewFeedback: photoFeedback 
-              } 
-            })}
-            disabled={!canAnalyze}
-            className={`w-full p-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
-              canAnalyze ? 'bg-[#005da6] text-white shadow-xl shadow-blue-500/30' : 'bg-gray-100 text-gray-300'
+            disabled={!isReady}
+            onClick={() => navigate('/estimate')}
+            className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-xl ${
+              isReady 
+              ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:scale-[0.98] shadow-orange-500/25' 
+              : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'
             }`}
           >
-            Start AI Analysis <ChevronRight size={20} />
+            <Sparkles size={20} className={isReady ? 'text-orange-100 animate-pulse' : 'text-slate-300'} />
+            Start AI Analysis
           </button>
+
+          {/* Home Bar Indicator */}
+          <div className="mt-4 flex justify-center">
+              <div className="h-1.5 w-1/3 bg-slate-200 rounded-full"></div>
+          </div>
         </div>
 
-        {/* OVERLAY SECTION */}
-        {activeView && (
-          <div className="absolute inset-0 z-50 bg-black flex flex-col animate-in fade-in duration-300">
-            <div className="p-6 flex justify-between items-center bg-black/60 backdrop-blur-md text-white">
-              <button onClick={() => {setActiveView(null); setTempImage(null); setTempFeedback('')}}>
-                <XCircle size={28} />
-              </button>
-              <span className="capitalize font-bold tracking-wide text-xs">Capturing {activeView}</span>
-              <div className="w-7"></div>
-            </div>
-
-            <div className="flex-1 relative flex items-center justify-center bg-zinc-950">
-              {!tempImage ? (
-                <Webcam
-                  audio={false}
-                  ref={webcamRef}
-                  screenshotFormat="image/jpeg"
-                  className="w-full h-full object-cover"
-                  videoConstraints={{ facingMode: "environment" }}
-                  playsInline={true} // <--- FIX: Forces inline playback on mobile
-                />
-              ) : (
-                <img src={tempImage} className="w-full h-full object-contain" alt="Review" />
-              )}
-            </div>
-
-            <div className="p-8 bg-zinc-950 flex flex-col gap-6 items-center">
-              {tempImage && (
-                <div className="w-full max-w-xs animate-in slide-in-from-bottom-2">
-                  <div className="flex items-center gap-2 mb-2 text-white/60">
-                    <MessageSquare size={14} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#005da6]">Feedback</span>
-                  </div>
-                  <input 
-                    type="text"
-                    value={tempFeedback}
-                    onChange={(e) => setTempFeedback(e.target.value)}
-                    placeholder="Describe specific details for this photo..."
-                    className="w-full bg-white/10 border border-white/20 rounded-xl p-3.5 text-white text-sm outline-none focus:border-[#005da6] transition-all"
-                  />
-                </div>
-              )}
-
-              <div className="flex justify-center items-center gap-12 w-full">
-                {!tempImage ? (
-                  <button onClick={capture} className="w-20 h-20 bg-white rounded-full border-[6px] border-zinc-800 flex items-center justify-center">
-                     <div className="w-16 h-16 bg-white rounded-full border-2 border-zinc-200"></div>
-                  </button>
-                ) : (
-                  <>
-                    <button onClick={() => {setTempImage(null); setTempFeedback('')}} className="flex flex-col items-center text-white/70 gap-3">
-                      <div className="p-4 bg-zinc-800 rounded-full border border-zinc-700"><RefreshCw size={24} /></div>
-                      <span className="text-[10px] font-bold uppercase tracking-tighter">Retake</span>
-                    </button>
-                    <button onClick={handleSave} className="flex flex-col items-center text-white gap-3">
-                      <div className="p-5 bg-[#005da6] rounded-full shadow-2xl shadow-blue-500/40">
-                        <Check size={28} strokeWidth={3} />
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[#005da6]">Keep Photo</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
